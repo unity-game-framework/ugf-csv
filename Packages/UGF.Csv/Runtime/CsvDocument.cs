@@ -10,6 +10,23 @@ namespace UGF.Csv.Runtime
 
         private readonly List<List<CsvElement>> m_elements = new List<List<CsvElement>>();
 
+        public CsvDocument()
+        {
+        }
+
+        public CsvDocument(int columnCount, int rowCount)
+        {
+            if (columnCount < 0) throw new ArgumentOutOfRangeException(nameof(columnCount));
+            if (rowCount < 0) throw new ArgumentOutOfRangeException(nameof(rowCount));
+
+            for (int i = 0; i < columnCount; i++)
+            {
+                List<CsvElement> column = CreateColumn(rowCount);
+
+                m_elements.Add(column);
+            }
+        }
+
         public void AddColumn()
         {
             InsertColumn(ColumnCount);
@@ -65,6 +82,47 @@ namespace UGF.Csv.Runtime
             m_elements.Clear();
         }
 
+        public CsvElement GetElement(string value)
+        {
+            if (!TryGetElement(value, out CsvElement element))
+            {
+                throw new ArgumentException($"Element with the specified value not found: '{value}'.");
+            }
+
+            return element;
+        }
+
+        public bool TryGetElement(string value, out CsvElement element)
+        {
+            for (int i = 0; i < m_elements.Count; i++)
+            {
+                List<CsvElement> column = m_elements[i];
+
+                for (int r = 0; r < column.Count; r++)
+                {
+                    element = column[r];
+
+                    if (element.Value == value)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            element = null;
+            return false;
+        }
+
+        public CsvElement GetElement(string columnName, string rowName)
+        {
+            if (!TryGetElement(columnName, rowName, out CsvElement element))
+            {
+                throw new ArgumentException($"Element not found at specified column and row name: [{columnName}, {rowName}].");
+            }
+
+            return element;
+        }
+
         public bool TryGetElement(string columnName, string rowName, out CsvElement element)
         {
             if (TryGetColumn(columnName, out List<CsvElement> column) && TryGetRowIndex(rowName, out int rowIndex))
@@ -78,6 +136,16 @@ namespace UGF.Csv.Runtime
 
             element = null;
             return false;
+        }
+
+        public CsvElement GetElement(int column, int row)
+        {
+            if (!TryGetElement(column, row, out CsvElement element))
+            {
+                throw new ArgumentException($"Element not found at specified column and row index: [{column}, {row}].");
+            }
+
+            return element;
         }
 
         public bool TryGetElement(int column, int index, out CsvElement element)
