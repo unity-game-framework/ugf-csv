@@ -1,3 +1,15 @@
-﻿{
-	"name": "UGF.Csv.Runtime"
+{
+    "name": "UGF.Csv.Runtime",
+    "references": [
+        "GUID:b8e7958af213f264190804a4063fe5b3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
