@@ -1,0 +1,17 @@
+{
+    "name": "UGF.Csv.Runtime.Tests",
+    "references": [
+        "GUID:70048965c43eb04499a5187b0bcf0467"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
