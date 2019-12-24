@@ -22,6 +22,9 @@ namespace UGF.Csv.Runtime
 
         public static void ToCsv(CsvWriter writer, DataTable table)
         {
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            if (table == null) throw new ArgumentNullException(nameof(table));
+
             for (int i = 0; i < table.Columns.Count; i++)
             {
                 DataColumn column = table.Columns[i];
@@ -64,6 +67,7 @@ namespace UGF.Csv.Runtime
         public static void FromCsv(CsvReader reader, DataTable table)
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (table == null) throw new ArgumentNullException(nameof(table));
 
             using (var dataReader = new CsvDataReader(reader))
             {
