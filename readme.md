@@ -4,7 +4,7 @@ UGF.Csv
 
 ## Info
 
-- **Version**: `0.0.0-preview`
+- **Version**: `0.1.0-preview`
 - **Unity Version**: `2019.3.0`
 - **Api Compatibility Level**: `.NET Standard 2.0`
 
@@ -19,11 +19,11 @@ UGF.Csv
 ### Registries
 
 - [Stable][2] (N/A)
-- [Develop][3] (N/A)
+- [Develop][3]
 
 ## Description
 
-No description.
+Runtime integration of the [CsvHelper](https://github.com/JoshClose/CsvHelper) (`12.2.1`).
 
 ## How to Install
 
