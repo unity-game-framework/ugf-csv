@@ -13,7 +13,10 @@ namespace UGF.Csv.Runtime.Tests
 
             for (int i = 0; i < 4; i++)
             {
-                table.Columns.Add(new DataColumn());
+                table.Columns.Add(new DataColumn
+                {
+                    ColumnName = ((char)('a' + i)).ToString()
+                });
             }
 
             for (int r = 0; r < 2; r++)

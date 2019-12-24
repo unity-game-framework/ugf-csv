@@ -2,7 +2,6 @@
 using System.Data;
 using System.IO;
 using CsvHelper;
-using CsvHelper.Configuration;
 
 namespace UGF.Csv.Runtime
 {
@@ -12,14 +11,18 @@ namespace UGF.Csv.Runtime
         {
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            var configuration = new Configuration
-            {
-                HasHeaderRecord = false
-            };
-
             using (var writer = new StringWriter())
-            using (var csv = new CsvWriter(writer, configuration))
+            using (var csv = new CsvWriter(writer))
             {
+                for (int i = 0; i < table.Columns.Count; i++)
+                {
+                    DataColumn column = table.Columns[i];
+
+                    csv.WriteField(column.ColumnName);
+                }
+
+                csv.NextRecord();
+
                 for (int r = 0; r < table.Rows.Count; r++)
                 {
                     DataRow row = table.Rows[r];
@@ -42,13 +45,8 @@ namespace UGF.Csv.Runtime
         {
             if (string.IsNullOrEmpty(text)) throw new ArgumentException("Value cannot be null or empty.", nameof(text));
 
-            var configuration = new Configuration
-            {
-                HasHeaderRecord = false
-            };
-
             using (var reader = new StringReader(text))
-            using (var csv = new CsvReader(reader, configuration))
+            using (var csv = new CsvReader(reader))
             using (var dataReader = new CsvDataReader(csv))
             {
                 var table = new DataTable();
