@@ -1,9 +1,9 @@
 {
     "name": "com.ugf.csv",
     "displayName": "UGF.Csv",
-    "version": "0.0.0-preview",
+    "version": "0.1.0-preview",
     "unity": "2019.3",
-    "description": "No description.",
+    "description": "Runtime integration of the CsvHelper (12.2.1).",
     "author": {
         "name": "Unity Game Framework",
         "url": "https://github.com/unity-game-framework"
