@@ -11,33 +11,38 @@ namespace UGF.Csv.Runtime
         {
             if (table == null) throw new ArgumentNullException(nameof(table));
 
-            using (var writer = new StringWriter())
-            using (var csv = new CsvWriter(writer))
+            using (var stream = new StringWriter())
+            using (var writer = new CsvWriter(stream))
             {
-                for (int i = 0; i < table.Columns.Count; i++)
-                {
-                    DataColumn column = table.Columns[i];
+                ToCsv(writer, table);
 
-                    csv.WriteField(column.ColumnName);
+                return stream.ToString();
+            }
+        }
+
+        public static void ToCsv(CsvWriter writer, DataTable table)
+        {
+            for (int i = 0; i < table.Columns.Count; i++)
+            {
+                DataColumn column = table.Columns[i];
+
+                writer.WriteField(column.ColumnName);
+            }
+
+            writer.NextRecord();
+
+            for (int r = 0; r < table.Rows.Count; r++)
+            {
+                DataRow row = table.Rows[r];
+
+                for (int c = 0; c < table.Columns.Count; c++)
+                {
+                    object value = row[c];
+
+                    writer.WriteField(value);
                 }
 
-                csv.NextRecord();
-
-                for (int r = 0; r < table.Rows.Count; r++)
-                {
-                    DataRow row = table.Rows[r];
-
-                    for (int c = 0; c < table.Columns.Count; c++)
-                    {
-                        object value = row[c];
-
-                        csv.WriteField(value);
-                    }
-
-                    csv.NextRecord();
-                }
-
-                return writer.ToString();
+                writer.NextRecord();
             }
         }
 
@@ -45,15 +50,24 @@ namespace UGF.Csv.Runtime
         {
             if (string.IsNullOrEmpty(text)) throw new ArgumentException("Value cannot be null or empty.", nameof(text));
 
-            using (var reader = new StringReader(text))
-            using (var csv = new CsvReader(reader))
-            using (var dataReader = new CsvDataReader(csv))
+            using (var stream = new StringReader(text))
+            using (var reader = new CsvReader(stream))
             {
                 var table = new DataTable();
 
-                table.Load(dataReader);
+                FromCsv(reader, table);
 
                 return table;
+            }
+        }
+
+        public static void FromCsv(CsvReader reader, DataTable table)
+        {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+
+            using (var dataReader = new CsvDataReader(reader))
+            {
+                table.Load(dataReader);
             }
         }
     }
