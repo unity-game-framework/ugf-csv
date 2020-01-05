@@ -1,18 +1,28 @@
 ﻿using System;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using CsvHelper;
+using CsvHelper.Configuration;
 
 namespace UGF.Csv.Runtime
 {
     public static class CsvUtility
     {
+        public static Configuration DefaultConfiguration { get; } = new Configuration(CultureInfo.InvariantCulture);
+
         public static string ToCsv(DataTable table)
         {
+            return ToCsv(table, DefaultConfiguration);
+        }
+
+        public static string ToCsv(DataTable table, Configuration configuration)
+        {
             if (table == null) throw new ArgumentNullException(nameof(table));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             using (var stream = new StringWriter())
-            using (var writer = new CsvWriter(stream))
+            using (var writer = new CsvWriter(stream, configuration))
             {
                 ToCsv(writer, table);
 
@@ -51,10 +61,16 @@ namespace UGF.Csv.Runtime
 
         public static DataTable FromCsv(string text)
         {
+            return FromCsv(text, DefaultConfiguration);
+        }
+
+        public static DataTable FromCsv(string text, Configuration configuration)
+        {
             if (string.IsNullOrEmpty(text)) throw new ArgumentException("Value cannot be null or empty.", nameof(text));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
             using (var stream = new StringReader(text))
-            using (var reader = new CsvReader(stream))
+            using (var reader = new CsvReader(stream, configuration))
             {
                 var table = new DataTable();
 
