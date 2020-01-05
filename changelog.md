@@ -26,6 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 - Nothing.
 
+## 0.2.0-preview - 2020-01-05
+- [Commits](https://github.com/unity-game-framework/ugf-csv/compare/0.1.0-preview...0.2.0-preview)
+- [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/1?closed=1)
+
+### Added
+- `CsvUtility.DefaultConfiguration` with invariant culture.
+- `CsvUtility.ToCsv` and `CsvUtility.FromCsv` overloads with option to specify configuration.
+
+### Changed
+- `CsvUtility.ToCsv` and `CsvUtility.FromCsv` now use default configuration.
+
 ## 0.1.0-preview - 2019-12-24
 - [Commits](https://github.com/unity-game-framework/ugf-csv/compare/f1de95b...0.1.0-preview)
 - [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/1?closed=1)
