@@ -1,32 +1,30 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased - 2019-01-01
-- [Commits](https://github.com/unity-game-framework/ugf-csv/compare/0.0.0...0.0.0)
-- [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/0?closed=1)
+## [1.0.0](https://github.com/unity-game-framework/ugf-csv/releases/tag/1.0.0) - 2020-10-05  
+
+### Release Notes
+
+- [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/3?closed=1)  
+    
 
 ### Added
-- Nothing.
+
+- Add csv merge ([#11](https://github.com/unity-game-framework/ugf-csv/pull/11))  
+    - Add `CsvUtility.MergeCsv` methods to merge data table and csv files.
 
 ### Changed
-- Nothing.
 
-### Deprecated
-- Nothing.
+- Update CsvHelper ([#8](https://github.com/unity-game-framework/ugf-csv/pull/8))  
+    - Update to `15.0.5` version.
+- Update to Unity 2020.1 ([#5](https://github.com/unity-game-framework/ugf-csv/issues/5))
 
-### Removed
-- Nothing.
+## [0.2.0-preview](https://github.com/unity-game-framework/ugf-csv/releases/tag/0.2.0-preview) - 2020-01-05  
 
-### Fixed
-- Nothing.
-
-### Security
-- Nothing.
-
-## 0.2.0-preview - 2020-01-05
 - [Commits](https://github.com/unity-game-framework/ugf-csv/compare/0.1.0-preview...0.2.0-preview)
 - [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/1?closed=1)
 
@@ -37,12 +35,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `CsvUtility.ToCsv` and `CsvUtility.FromCsv` now use default configuration.
 
-## 0.1.0-preview - 2019-12-24
+## [0.1.0-preview](https://github.com/unity-game-framework/ugf-csv/releases/tag/0.1.0-preview) - 2019-12-24  
+
 - [Commits](https://github.com/unity-game-framework/ugf-csv/compare/f1de95b...0.1.0-preview)
 - [Milestone](https://github.com/unity-game-framework/ugf-csv/milestone/1?closed=1)
 
 ### Added
 - This is a initial release.
 
----
-> Unity Game Framework | Copyright 2019
+
