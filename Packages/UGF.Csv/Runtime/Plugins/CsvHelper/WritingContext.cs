@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -7,6 +7,7 @@ using CsvHelper.TypeConversion;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace CsvHelper
 {
@@ -14,10 +15,13 @@ namespace CsvHelper
 	/// CSV writing state.
 	/// </summary>
 	public class WritingContext : IDisposable
+#if NET47 || NETSTANDARD
+		, IAsyncDisposable
+#endif
 	{
 		private bool disposed;
 		private TextWriter writer;
-		private Configuration.Configuration configuration;
+		private Configuration.CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets the type actions.
@@ -81,7 +85,7 @@ namespace CsvHelper
 		/// <param name="writer">The writer.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">A value indicating if the TextWriter should be left open.</param>
-		public WritingContext(TextWriter writer, Configuration.Configuration configuration, bool leaveOpen)
+		public WritingContext(TextWriter writer, Configuration.CsvConfiguration configuration, bool leaveOpen)
 		{
 			this.writer = writer ?? throw new ArgumentNullException(nameof(writer));
 			this.configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
@@ -134,5 +138,42 @@ namespace CsvHelper
 			writer = null;
 			disposed = true;
 		}
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <filterpriority>2</filterpriority>
+		public virtual async ValueTask DisposeAsync()
+		{
+			await DisposeAsync(true).ConfigureAwait(false);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		protected virtual async ValueTask DisposeAsync(bool disposing)
+		{
+			if (disposed)
+			{
+				return;
+			}
+
+			if (disposing && writer != null)
+			{
+#if NETSTANDARD2_1
+				await writer.DisposeAsync().ConfigureAwait(false);
+#else
+				await writer.FlushAsync().ConfigureAwait(false);
+				writer.Dispose();
+#endif
+			}
+
+			writer = null;
+			disposed = true;
+		}
+#endif
 	}
 }

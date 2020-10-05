@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -48,5 +48,16 @@ namespace CsvHelper.Configuration
 		/// Gets or sets the character used to escape a detected injection.
 		/// </summary>
 		char InjectionEscapeCharacter { get; set; }
+
+		/// <summary>
+		/// Gets or sets the newline to use when writing.
+		/// </summary>
+		NewLine NewLine { get; set; }
+
+		/// <summary>
+		/// Gets the newline string to use when writing. This string is determined
+		/// by the <see cref="NewLine"/> value.
+		/// </summary>
+		string NewLineString { get; }
 	}
 }

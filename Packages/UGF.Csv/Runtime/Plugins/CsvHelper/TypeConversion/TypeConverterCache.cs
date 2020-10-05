@@ -1,8 +1,7 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
-
 using CsvHelper.Configuration.Attributes;
 using System;
 using System.Collections;
@@ -222,6 +221,7 @@ namespace CsvHelper.TypeConversion
 			AddConverter(typeof(ushort), new UInt16Converter());
 			AddConverter(typeof(uint), new UInt32Converter());
 			AddConverter(typeof(ulong), new UInt64Converter());
+			AddConverter(typeof(Uri), new UriConverter());
 			// Collection types need to come after value types.
 			AddConverter(typeof(IList), new IEnumerableConverter());
 			AddConverter(typeof(ICollection), new IEnumerableConverter());

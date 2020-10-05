@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -7,6 +7,7 @@ using CsvHelper.TypeConversion;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -20,13 +21,13 @@ namespace CsvHelper.Configuration
 	{
 		private static readonly List<Type> enumerableConverters = new List<Type>
 		{
-			typeof( ArrayConverter ),
-			typeof( CollectionGenericConverter ),
-			typeof( EnumerableConverter ),
-			typeof( IDictionaryConverter ),
-			typeof( IDictionaryGenericConverter ),
-			typeof( IEnumerableConverter ),
-			typeof( IEnumerableGenericConverter )
+			typeof(ArrayConverter),
+			typeof(CollectionGenericConverter),
+			typeof(EnumerableConverter),
+			typeof(IDictionaryConverter),
+			typeof(IDictionaryGenericConverter),
+			typeof(IEnumerableConverter),
+			typeof(IEnumerableGenericConverter)
 		};
 
 		/// <summary>
@@ -129,12 +130,13 @@ namespace CsvHelper.Configuration
 		}
 
 		/// <summary>
-		/// Auto maps all members for the given type. If a member 
+		/// Auto maps all members for the given type. If a member
 		/// is mapped again it will override the existing map.
 		/// </summary>
-		public virtual void AutoMap()
+		/// <param name="culture">The culture.</param>
+		public virtual void AutoMap(CultureInfo culture)
 		{
-			AutoMap(new Configuration());
+			AutoMap(new CsvConfiguration(culture));
 		}
 
 		/// <summary>
@@ -142,7 +144,7 @@ namespace CsvHelper.Configuration
 		/// is mapped again it will override the existing map.
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
-		public virtual void AutoMap(Configuration configuration)
+		public virtual void AutoMap(CsvConfiguration configuration)
 		{
 			var type = GetGenericType();
 			if (typeof(IEnumerable).IsAssignableFrom(type))
@@ -232,7 +234,7 @@ namespace CsvHelper.Configuration
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapMembers(ClassMap map, Configuration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapMembers(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
 
@@ -365,7 +367,7 @@ namespace CsvHelper.Configuration
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="mapParents">The list of parents for the map.</param>
 		/// <param name="indexStart">The index starting point.</param>
-		protected virtual void AutoMapConstructorParameters(ClassMap map, Configuration configuration, LinkedList<Type> mapParents, int indexStart = 0)
+		protected virtual void AutoMapConstructorParameters(ClassMap map, CsvConfiguration configuration, LinkedList<Type> mapParents, int indexStart = 0)
 		{
 			var type = map.GetGenericType();
 			var constructor = configuration.GetConstructor(map.ClassType);
@@ -482,89 +484,11 @@ namespace CsvHelper.Configuration
 		protected virtual void ApplyAttributes(MemberMap memberMap)
 		{
 			var member = memberMap.Data.Member;
+			var attributes = member.GetCustomAttributes().OfType<IMemberMapper>();
 
-			if (member.GetCustomAttribute(typeof(IndexAttribute)) is IndexAttribute indexAttribute)
+			foreach (var attribute in attributes)
 			{
-				memberMap.Data.Index = indexAttribute.Index;
-				memberMap.Data.IndexEnd = indexAttribute.IndexEnd;
-				memberMap.Data.IsIndexSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(NameAttribute)) is NameAttribute nameAttribute)
-			{
-				memberMap.Data.Names.Clear();
-				memberMap.Data.Names.AddRange(nameAttribute.Names);
-				memberMap.Data.IsNameSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(NameIndexAttribute)) is NameIndexAttribute nameIndexAttribute)
-			{
-				memberMap.Data.NameIndex = nameIndexAttribute.NameIndex;
-			}
-
-			if (member.GetCustomAttribute(typeof(IgnoreAttribute)) is IgnoreAttribute ignoreAttribute)
-			{
-				memberMap.Data.Ignore = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(OptionalAttribute)) is OptionalAttribute optionalAttribute)
-			{
-				memberMap.Data.IsOptional = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(DefaultAttribute)) is DefaultAttribute defaultAttribute)
-			{
-				memberMap.Data.Default = defaultAttribute.Default;
-				memberMap.Data.IsDefaultSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(ConstantAttribute)) is ConstantAttribute constantAttribute)
-			{
-				memberMap.Data.Constant = constantAttribute.Constant;
-				memberMap.Data.IsConstantSet = true;
-			}
-
-			if (member.GetCustomAttribute(typeof(TypeConverterAttribute)) is TypeConverterAttribute typeConverterAttribute)
-			{
-				memberMap.Data.TypeConverter = typeConverterAttribute.TypeConverter;
-			}
-
-			if (member.GetCustomAttribute(typeof(CultureInfoAttribute)) is CultureInfoAttribute cultureInfoAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.CultureInfo = cultureInfoAttribute.CultureInfo;
-			}
-
-			if (member.GetCustomAttribute(typeof(DateTimeStylesAttribute)) is DateTimeStylesAttribute dateTimeStylesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.DateTimeStyle = dateTimeStylesAttribute.DateTimeStyles;
-			}
-
-			if (member.GetCustomAttribute(typeof(NumberStylesAttribute)) is NumberStylesAttribute numberStylesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.NumberStyle = numberStylesAttribute.NumberStyles;
-			}
-
-			if (member.GetCustomAttribute(typeof(FormatAttribute)) is FormatAttribute formatAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.Formats = formatAttribute.Formats;
-			}
-
-			if (member.GetCustomAttribute(typeof(BooleanTrueValuesAttribute)) is BooleanTrueValuesAttribute booleanTrueValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanTrueValues.AddRange(booleanTrueValuesAttribute.TrueValues);
-			}
-
-			if (member.GetCustomAttribute(typeof(BooleanFalseValuesAttribute)) is BooleanFalseValuesAttribute booleanFalseValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.Clear();
-				memberMap.Data.TypeConverterOptions.BooleanFalseValues.AddRange(booleanFalseValuesAttribute.FalseValues);
-			}
-
-			if (member.GetCustomAttribute(typeof(NullValuesAttribute)) is NullValuesAttribute nullValuesAttribute)
-			{
-				memberMap.Data.TypeConverterOptions.NullValues.Clear();
-				memberMap.Data.TypeConverterOptions.NullValues.AddRange(nullValuesAttribute.NullValues);
+				attribute.ApplyTo(memberMap);
 			}
 		}
 
@@ -575,10 +499,11 @@ namespace CsvHelper.Configuration
 		protected virtual void ApplyAttributes(MemberReferenceMap referenceMap)
 		{
 			var member = referenceMap.Data.Member;
+			var attributes = member.GetCustomAttributes().OfType<IMemberReferenceMapper>();
 
-			if (member.GetCustomAttribute(typeof(HeaderPrefixAttribute)) is HeaderPrefixAttribute headerPrefixAttribute)
+			foreach (var attribute in attributes)
 			{
-				referenceMap.Data.Prefix = headerPrefixAttribute.Prefix ?? member.Name + ".";
+				attribute.ApplyTo(referenceMap);
 			}
 		}
 	}

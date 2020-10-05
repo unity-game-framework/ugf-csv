@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -59,10 +59,11 @@ namespace CsvHelper
 				}
 			}
 
-			var typeNames = new List<string>();
-			typeNames.Add(type.AssemblyQualifiedName);
-			typeNames.AddRange(args.Select(a => a.GetType().AssemblyQualifiedName));
-			var key = string.Join("|", typeNames).GetHashCode();
+			var typeHashCodes =
+				new List<Type> { type }
+				.Union(args.Select(a => a.GetType()))
+				.Select(t => t.UnderlyingSystemType.GetHashCode());
+			var key = string.Join("|", typeHashCodes).GetHashCode();
 
 			Delegate func;
 			lock (locker)
