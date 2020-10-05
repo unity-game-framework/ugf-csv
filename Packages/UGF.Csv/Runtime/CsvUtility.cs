@@ -90,5 +90,32 @@ namespace UGF.Csv.Runtime
                 table.Load(dataReader);
             }
         }
+
+        public static string MergeCsv(string csv, string csvToMerge)
+        {
+            if (string.IsNullOrEmpty(csv)) throw new ArgumentException("Value cannot be null or empty.", nameof(csv));
+            if (string.IsNullOrEmpty(csvToMerge)) throw new ArgumentException("Value cannot be null or empty.", nameof(csvToMerge));
+
+            DataTable table = FromCsv(csv);
+            DataTable merge = FromCsv(csvToMerge);
+
+            table.Merge(merge, true, MissingSchemaAction.Add);
+
+            string result = ToCsv(table);
+
+            return result;
+        }
+
+        public static DataTable MergeCsv(DataTable table, DataTable tableToMerge)
+        {
+            if (table == null) throw new ArgumentNullException(nameof(table));
+            if (tableToMerge == null) throw new ArgumentNullException(nameof(tableToMerge));
+
+            DataTable result = table.Copy();
+
+            result.Merge(tableToMerge, true, MissingSchemaAction.Add);
+
+            return result;
+        }
     }
 }
