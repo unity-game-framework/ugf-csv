@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -15,7 +15,7 @@ namespace CsvHelper.Configuration
 	public class ClassMapCollection
 	{
 		private readonly Dictionary<Type, ClassMap> data = new Dictionary<Type, ClassMap>();
-		private readonly Configuration configuration;
+		private readonly CsvConfiguration configuration;
 
 		/// <summary>
 		/// Gets the <see cref="ClassMap"/> for the specified record type.
@@ -53,7 +53,7 @@ namespace CsvHelper.Configuration
 		/// Creates a new instance using the given configuration.
 		/// </summary>
 		/// <param name="configuration">The configuration.</param>
-		public ClassMapCollection( Configuration configuration )
+		public ClassMapCollection( CsvConfiguration configuration )
 		{
 			this.configuration = configuration;
 		}

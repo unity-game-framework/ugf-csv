@@ -9,14 +9,14 @@ namespace UGF.Csv.Runtime
 {
     public static class CsvUtility
     {
-        public static Configuration DefaultConfiguration { get; } = new Configuration(CultureInfo.InvariantCulture);
+        public static CsvConfiguration DefaultConfiguration { get; } = new CsvConfiguration(CultureInfo.InvariantCulture);
 
         public static string ToCsv(DataTable table)
         {
             return ToCsv(table, DefaultConfiguration);
         }
 
-        public static string ToCsv(DataTable table, Configuration configuration)
+        public static string ToCsv(DataTable table, CsvConfiguration configuration)
         {
             if (table == null) throw new ArgumentNullException(nameof(table));
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
@@ -64,7 +64,7 @@ namespace UGF.Csv.Runtime
             return FromCsv(text, DefaultConfiguration);
         }
 
-        public static DataTable FromCsv(string text, Configuration configuration)
+        public static DataTable FromCsv(string text, CsvConfiguration configuration)
         {
             if (string.IsNullOrEmpty(text)) throw new ArgumentException("Value cannot be null or empty.", nameof(text));
             if (configuration == null) throw new ArgumentNullException(nameof(configuration));
@@ -89,6 +89,33 @@ namespace UGF.Csv.Runtime
             {
                 table.Load(dataReader);
             }
+        }
+
+        public static string MergeCsv(string csv, string csvToMerge)
+        {
+            if (string.IsNullOrEmpty(csv)) throw new ArgumentException("Value cannot be null or empty.", nameof(csv));
+            if (string.IsNullOrEmpty(csvToMerge)) throw new ArgumentException("Value cannot be null or empty.", nameof(csvToMerge));
+
+            DataTable table = FromCsv(csv);
+            DataTable merge = FromCsv(csvToMerge);
+
+            table.Merge(merge, true, MissingSchemaAction.Add);
+
+            string result = ToCsv(table);
+
+            return result;
+        }
+
+        public static DataTable MergeCsv(DataTable table, DataTable tableToMerge)
+        {
+            if (table == null) throw new ArgumentNullException(nameof(table));
+            if (tableToMerge == null) throw new ArgumentNullException(nameof(tableToMerge));
+
+            DataTable result = table.Copy();
+
+            result.Merge(tableToMerge, true, MissingSchemaAction.Add);
+
+            return result;
         }
     }
 }
