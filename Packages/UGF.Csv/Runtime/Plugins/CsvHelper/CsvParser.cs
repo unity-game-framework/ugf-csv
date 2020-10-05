@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
+using System.Globalization;
 
 // This file is generated from a T4 template.
 // Modifying it directly won't do you any good.
@@ -41,21 +42,23 @@ namespace CsvHelper
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
-		public CsvParser(TextReader reader) : this(new CsvFieldReader(reader, new Configuration.Configuration(), false)) { }
+		/// <param name="culture">The culture.</param>
+		public CsvParser(TextReader reader, CultureInfo culture) : this(new CsvFieldReader(reader, new Configuration.CsvConfiguration(culture), false)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader" /> with the CSV file data.</param>
+		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser(TextReader reader, bool leaveOpen) : this(new CsvFieldReader(reader, new Configuration.Configuration(), leaveOpen)) { }
+		public CsvParser(TextReader reader, CultureInfo culture, bool leaveOpen) : this(new CsvFieldReader(reader, new Configuration.CsvConfiguration(culture), leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
 		/// </summary>
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvParser(TextReader reader, Configuration.Configuration configuration) : this(new CsvFieldReader(reader, configuration, false)) { }
+		public CsvParser(TextReader reader, Configuration.CsvConfiguration configuration) : this(new CsvFieldReader(reader, configuration, false)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="TextReader"/> and <see cref="Configuration"/>.
@@ -63,7 +66,7 @@ namespace CsvHelper
 		/// <param name="reader">The <see cref="TextReader"/> with the CSV file data.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvParser(TextReader reader, Configuration.Configuration configuration, bool leaveOpen) : this(new CsvFieldReader(reader, configuration, leaveOpen)) { }
+		public CsvParser(TextReader reader, Configuration.CsvConfiguration configuration, bool leaveOpen) : this(new CsvFieldReader(reader, configuration, leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new parser using the given <see cref="FieldReader"/>.
@@ -875,6 +878,8 @@ namespace CsvHelper
 				return true;
 			}
 
+			var originalC = c;
+			var charsRead = 0;
 			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !fieldReader.FillBuffer())
@@ -884,8 +889,12 @@ namespace CsvHelper
 				}
 
 				c = fieldReader.GetChar();
+				charsRead++;
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					c = originalC;
+					fieldReader.SetBufferPosition(-charsRead);
+
 					return false;
 				}
 			}
@@ -910,6 +919,8 @@ namespace CsvHelper
 				return true;
 			}
 
+			var originalC = c;
+			var charsRead = 0;
 			for (var i = 1; i < context.ParserConfiguration.Delimiter.Length; i++)
 			{
 				if (fieldReader.IsBufferEmpty && !await fieldReader.FillBufferAsync().ConfigureAwait(false))
@@ -919,8 +930,12 @@ namespace CsvHelper
 				}
 
 				c = fieldReader.GetChar();
+				charsRead++;
 				if (c != context.ParserConfiguration.Delimiter[i])
 				{
+					c = originalC;
+					fieldReader.SetBufferPosition(-charsRead);
+
 					return false;
 				}
 			}

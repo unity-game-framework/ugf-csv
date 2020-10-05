@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using CsvHelper.Expressions;
+using System.Globalization;
 
 namespace CsvHelper
 {
@@ -40,33 +41,35 @@ namespace CsvHelper
 		public virtual IParser Parser => parser;
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
-		public CsvReader(TextReader reader) : this(new CsvParser(reader, new Configuration.Configuration(), false)) { }
+		/// <param name="culture">The culture.</param>
+		public CsvReader(TextReader reader, CultureInfo culture) : this(new CsvParser(reader, new Configuration.CsvConfiguration(culture), false)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
+		/// <param name="culture">The culture.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader(TextReader reader, bool leaveOpen) : this(new CsvParser(reader, new Configuration.Configuration(), leaveOpen)) { }
+		public CsvReader(TextReader reader, CultureInfo culture, bool leaveOpen) : this(new CsvParser(reader, new Configuration.CsvConfiguration(culture), leaveOpen)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/> and
-		/// <see cref="CsvHelper.Configuration.Configuration"/> and <see cref="CsvParser"/> as the default parser.
+		/// Creates a new CSV reader using the given <see cref="TextReader" /> and
+		/// <see cref="CsvHelper.Configuration.CsvConfiguration" /> and <see cref="CsvParser" /> as the default parser.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvReader(TextReader reader, Configuration.Configuration configuration) : this(new CsvParser(reader, configuration, false)) { }
+		public CsvReader(TextReader reader, Configuration.CsvConfiguration configuration) : this(new CsvParser(reader, configuration, false)) { }
 
 		/// <summary>
-		/// Creates a new CSV reader using the given <see cref="TextReader"/>.
+		/// Creates a new CSV reader using the given <see cref="TextReader" />.
 		/// </summary>
 		/// <param name="reader">The reader.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvReader(TextReader reader, Configuration.Configuration configuration, bool leaveOpen) : this(new CsvParser(reader, configuration, leaveOpen)) { }
+		public CsvReader(TextReader reader, Configuration.CsvConfiguration configuration, bool leaveOpen) : this(new CsvParser(reader, configuration, leaveOpen)) { }
 
 		/// <summary>
 		/// Creates a new CSV reader using the given <see cref="IParser" />.
@@ -239,7 +242,7 @@ namespace CsvHelper
 		{
 			do
 			{
-				context.Record = await parser.ReadAsync();
+				context.Record = await parser.ReadAsync().ConfigureAwait(false);
 			}
 			while (context.Record != null && Configuration.ShouldSkipRecord(context.Record));
 
@@ -1237,6 +1240,195 @@ namespace CsvHelper
 				yield return record;
 			}
 		}
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Gets all the records in the CSV file and
+		/// converts each to <see cref="System.Type"/> T. The Read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+		/// <returns>An <see cref="IAsyncEnumerable{T}" /> of records.</returns>
+		public virtual async IAsyncEnumerable<T> GetRecordsAsync<T>()
+		{
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
+
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
+			{
+				if (!await ReadAsync().ConfigureAwait(false))
+				{
+					yield break;
+				}
+
+				ReadHeader();
+				ValidateHeader<T>();
+			}
+
+			while (await ReadAsync().ConfigureAwait(false))
+			{
+				T record;
+				try
+				{
+					record = recordManager.Value.Create<T>();
+				}
+				catch (Exception ex)
+				{
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
+
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
+
+					// If the callback doesn't throw, keep going.
+					continue;
+				}
+
+				yield return record;
+			}
+		}
+
+		/// <summary>
+		/// Gets all the records in the CSV file and converts
+		/// each to <see cref="System.Type"/> T. The read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <typeparam name="T">The <see cref="System.Type"/> of the record.</typeparam>
+		/// <param name="anonymousTypeDefinition">The anonymous type definition to use for the records.</param>
+		/// <returns>An <see cref="IEnumerable{T}"/> of records.</returns>
+		public virtual IAsyncEnumerable<T> GetRecordsAsync<T>(T anonymousTypeDefinition)
+		{
+			if (anonymousTypeDefinition == null)
+			{
+				throw new ArgumentNullException(nameof(anonymousTypeDefinition));
+			}
+
+			if (!anonymousTypeDefinition.GetType().IsAnonymous())
+			{
+				throw new ArgumentException($"Argument is not an anonymous type.", nameof(anonymousTypeDefinition));
+			}
+
+			return GetRecordsAsync<T>();
+		}
+
+		/// <summary>
+		/// Gets all the records in the CSV file and
+		/// converts each to <see cref="System.Type"/> T. The Read method
+		/// should not be used when using this.
+		/// </summary>
+		/// <param name="type">The <see cref="System.Type"/> of the record.</param>
+		/// <returns>An <see cref="IAsyncEnumerable{Object}" /> of records.</returns>
+		public virtual async IAsyncEnumerable<object> GetRecordsAsync(Type type)
+		{
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
+
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
+			{
+				if (!await ReadAsync().ConfigureAwait(false))
+				{
+					yield break;
+				}
+
+				ReadHeader();
+				ValidateHeader(type);
+			}
+
+			while (await ReadAsync().ConfigureAwait(false))
+			{
+				object record;
+				try
+				{
+					record = recordManager.Value.Create(type);
+				}
+				catch (Exception ex)
+				{
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
+
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
+
+					// If the callback doesn't throw, keep going.
+					continue;
+				}
+
+				yield return record;
+			}
+		}
+
+		/// <summary>
+		/// Enumerates the records hydrating the given record instance with row data.
+		/// The record instance is re-used and not cleared on each enumeration. 
+		/// This only works for streaming rows. If any methods are called on the projection
+		/// that force the evaluation of the IEnumerable, such as ToList(), the entire list
+		/// will contain the same instance of the record, which is the last row.
+		/// </summary>
+		/// <typeparam name="T">The type of the record.</typeparam>
+		/// <param name="record">The record to fill each enumeration.</param>
+		/// <returns>An <see cref="IAsyncEnumerable{T}"/> of records.</returns>
+		public virtual async IAsyncEnumerable<T> EnumerateRecordsAsync<T>(T record)
+		{
+			// Don't need to check if it's been read
+			// since we're doing the reading ourselves.
+
+			if (context.ReaderConfiguration.HasHeaderRecord && context.HeaderRecord == null)
+			{
+				if (!await ReadAsync().ConfigureAwait(false))
+				{
+					yield break;
+				}
+
+				ReadHeader();
+				ValidateHeader<T>();
+			}
+
+			while (await ReadAsync().ConfigureAwait(false))
+			{
+				try
+				{
+					recordManager.Value.Hydrate(record);
+				}
+				catch (Exception ex)
+				{
+					var csvHelperException = ex as CsvHelperException ?? new ReaderException(context, "An unexpected error occurred.", ex);
+
+					if (context.ReaderConfiguration.ReadingExceptionOccurred?.Invoke(csvHelperException) ?? true)
+					{
+						if (ex is CsvHelperException)
+						{
+							throw;
+						}
+						else
+						{
+							throw csvHelperException;
+						}
+					}
+
+					// If the callback doesn't throw, keep going.
+					continue;
+				}
+
+				yield return record;
+			}
+		}
+#endif // NET47 || NETSTANDARD
 
 		/// <summary>
 		/// Gets the index of the field at name if found.

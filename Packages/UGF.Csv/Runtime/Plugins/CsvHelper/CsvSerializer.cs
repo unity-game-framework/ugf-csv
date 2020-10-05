@@ -1,4 +1,4 @@
-﻿// Copyright 2009-2019 Josh Close and Contributors
+﻿// Copyright 2009-2020 Josh Close and Contributors
 // This file is a part of CsvHelper and is dual licensed under MS-PL and Apache 2.0.
 // See LICENSE.txt for details or visit http://www.opensource.org/licenses/ms-pl.html for MS-PL and http://opensource.org/licenses/Apache-2.0 for Apache 2.0.
 // https://github.com/JoshClose/CsvHelper
@@ -7,6 +7,7 @@ using System.IO;
 using CsvHelper.Configuration;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Globalization;
 
 namespace CsvHelper
 {
@@ -29,34 +30,36 @@ namespace CsvHelper
 		public virtual ISerializerConfiguration Configuration => context.SerializerConfiguration;
 
 		/// <summary>
-		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// Creates a new serializer using the given <see cref="TextWriter" />.
 		/// </summary>
-		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
-		public CsvSerializer(TextWriter writer) : this(writer, new Configuration.Configuration(), false) { }
+		/// <param name="writer">The <see cref="TextWriter" /> to write the CSV file data to.</param>
+		/// <param name="cultureInfo">The culture information.</param>
+		public CsvSerializer(TextWriter writer, CultureInfo cultureInfo) : this(writer, new Configuration.CsvConfiguration(cultureInfo), false) { }
 
 		/// <summary>
-		/// Creates a new serializer using the given <see cref="TextWriter"/>.
+		/// Creates a new serializer using the given <see cref="TextWriter" />.
 		/// </summary>
-		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
+		/// <param name="writer">The <see cref="TextWriter" /> to write the CSV file data to.</param>
+		/// <param name="cultureInfo">The culture information.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer(TextWriter writer, bool leaveOpen) : this(writer, new Configuration.Configuration(), leaveOpen) { }
+		public CsvSerializer(TextWriter writer, CultureInfo cultureInfo, bool leaveOpen) : this(writer, new Configuration.CsvConfiguration(cultureInfo), leaveOpen) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
-		/// and <see cref="CsvHelper.Configuration.Configuration"/>.
+		/// and <see cref="CsvHelper.Configuration.CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
-		public CsvSerializer(TextWriter writer, Configuration.Configuration configuration) : this(writer, configuration, false) { }
+		public CsvSerializer(TextWriter writer, Configuration.CsvConfiguration configuration) : this(writer, configuration, false) { }
 
 		/// <summary>
 		/// Creates a new serializer using the given <see cref="TextWriter"/>
-		/// and <see cref="CsvHelper.Configuration.Configuration"/>.
+		/// and <see cref="CsvHelper.Configuration.CsvConfiguration"/>.
 		/// </summary>
 		/// <param name="writer">The <see cref="TextWriter"/> to write the CSV file data to.</param>
 		/// <param name="configuration">The configuration.</param>
 		/// <param name="leaveOpen">true to leave the reader open after the CsvReader object is disposed, otherwise false.</param>
-		public CsvSerializer(TextWriter writer, Configuration.Configuration configuration, bool leaveOpen)
+		public CsvSerializer(TextWriter writer, Configuration.CsvConfiguration configuration, bool leaveOpen)
 		{
 			context = new WritingContext(writer, configuration, leaveOpen);
 		}
@@ -112,7 +115,7 @@ namespace CsvHelper
 		{
 			// Don't forget about the async method below!
 
-			context.Writer.Write("\r\n");
+			context.Writer.Write(context.SerializerConfiguration.NewLineString);
 		}
 
 		/// <summary>
@@ -120,7 +123,7 @@ namespace CsvHelper
 		/// </summary>
 		public virtual async Task WriteLineAsync()
 		{
-			await context.Writer.WriteAsync("\r\n").ConfigureAwait(false);
+			await context.Writer.WriteAsync(context.SerializerConfiguration.NewLineString).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -152,6 +155,38 @@ namespace CsvHelper
 			context = null;
 			disposed = true;
 		}
+
+#if NET47 || NETSTANDARD
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <filterpriority>2</filterpriority>
+		public virtual async ValueTask DisposeAsync()
+		{
+			await DisposeAsync(!context?.LeaveOpen ?? true).ConfigureAwait(false);
+			GC.SuppressFinalize(this);
+		}
+
+		/// <summary>
+		/// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+		/// </summary>
+		/// <param name="disposing">True if the instance needs to be disposed of.</param>
+		protected virtual async ValueTask DisposeAsync(bool disposing)
+		{
+			if (disposed)
+			{
+				return;
+			}
+
+			if (disposing && context != null)
+			{
+				await context.DisposeAsync().ConfigureAwait(false);
+			}
+
+			context = null;
+			disposed = true;
+		}
+#endif
 
 		/// <summary>
 		/// Sanitizes the field to prevent injection.
