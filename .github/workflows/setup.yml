@@ -6,7 +6,7 @@ on:
     inputs:
       branch:
         description: 'Branch'
-        default: master
+        default: main
         required: true
       name:
         description: 'Name'
@@ -24,6 +24,7 @@ env:
   displayName: ${{ github.event.inputs.displayName }}
   description: ${{ github.event.inputs.description }}
   repositoryName: ${{ github.repository }}
+  configPath: .github/config.yml
   packagePath: ''
 
 jobs:
@@ -38,9 +39,18 @@ jobs:
         ref: ${{ env.branch }}
     - name: Setup
       run: |
-        path=$(find "Packages" -name "UGF.*" -type d)
+        packagePath=$(find "Packages" -name "package.json" -type f)
 
-        echo "::set-env name=packagePath::$path/package.json"
+        echo "packagePath=$packagePath" >> $GITHUB_ENV
+    - name: Config
+      uses: unity-game-framework-actions/file-access@master
+      id: config
+      with:
+        input: |
+          get:
+            readme:
+              input: ${{ env.configPath }}
+              path: readme
     - name: Update
       uses: unity-game-framework-actions/file-access@master
       with:
@@ -61,19 +71,26 @@ jobs:
             changelogUrl:
               input: ${{ env.packagePath }}
               path: changelogUrl
-              value: https://github.com/${{ env.repositoryName }}/blob/master/license
-            licenseUrl:
+              value: https://github.com/${{ env.repositoryName }}/blob/main/changelog.md
+            licensesUrl:
               input: ${{ env.packagePath }}
-              path: licenseUrl
-              value: https://github.com/${{ env.repositoryName }}/blob/master/changelog.md
+              path: licensesUrl
+              value: https://github.com/${{ env.repositoryName }}/blob/main/license
             repositoryUrl:
               input: ${{ env.packagePath }}
               path: repository.url
               value: git://github.com/${{ env.repositoryName }}.git
+    - name: Readme
+      uses: unity-game-framework-actions/package-readme@master
+      with:
+        input: ${{ env.packagePath }}
+        config: ${{ steps.config.outputs.readme }}
+        output: readme.md
     - name: Push
       run: |
         git config user.name ${{ secrets.userName }}
         git config user.email ${{ secrets.userEmail }}
         git add ${{ env.packagePath }}
+        git add readme.md
         git commit -m "Setup project"
         git push
