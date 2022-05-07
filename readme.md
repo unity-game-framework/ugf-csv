@@ -2,11 +2,11 @@
 
 UGF.Csv
 
-## Info
+## Information
 
-- **Version**: `1.0.1`
-- **Unity**: `2021.1`
-- **API Compatibility Level**: `.NET Standard 2.0`
+- **Version**: `1.0.2`
+- **Unity**: `2021.3`
+- **API Compatibility Level**: `.NET Standard 2.1`
 
 ### Dependencies
 
